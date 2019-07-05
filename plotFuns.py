@@ -41,8 +41,8 @@ def cleanData(df, colVar, rowVar, totNam = None, colsToDrop = None, inCombVals =
         keys = list(inCombVals.keys())
         for key in keys:
             groupdDf.loc[key] = groupdDf.loc[inCombVals[key]].sum()
-            print(list(inCombVals[key]))
-            groupdDf.drop(list(inCombVals[key]), inplace = True)
+            dropRows = np.setdiff1d(inCombVals[key], keys)
+            groupdDf.drop(dropRows, inplace = True)
         
     # Add a column with is the total of all of the values in the df
     if totNam is not None:

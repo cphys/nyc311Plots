@@ -22,10 +22,23 @@ colDr = ['Unspecified']    # column to drop from dataframe
 tot = 'Total'
 
 # Index values to be combined
-combComps = {"Heating/Hot Water":['Heat/Hot Water','Heating']}
+combComps = {'Heat/Hot Water' : ['Heat/Hot Water','Heating'],
+             'Paint/Plaster' : ['Paint/Plaster','Paint - Plaster'],
+             'General Construction' : ['General Construction','Construction'],
+             'Non-Construction' : ['Nonconst']}
 
-# Clean the data using cleanData function
-groupdDf = cleanData(ny311Df, colVar,rowVar,totNam = tot, colsToDrop = colDr, inCombVals = combComps)
+
+cleanAndRem = False
+
+if cleanAndRem:
+    fileName = 'cleanAndRem'
+    # Clean the data using cleanData function
+    groupdDf = cleanData(ny311Df, colVar,rowVar,totNam = tot, colsToDrop = colDr, inCombVals = combComps)
+
+else:
+    fileName = "noCleanAndRem"
+    # Clean the data using cleanData function
+    groupdDf = cleanData(ny311Df, colVar,rowVar, totNam = tot, inCombVals = combComps, cleanData = False)
 
 
 colNams = groupdDf.columns.values
@@ -105,6 +118,6 @@ for i in range(nGrps):
              ) 
 
 dirName = os.getcwd()
-plt.savefig(os.path.join(dirName, '{}.png'.format(ttlLarge)), bbox_inches = 'tight') 
+plt.savefig(os.path.join(dirName, '{}_{}.png'.format(fileName, ttlLarge)), bbox_inches = 'tight') 
 
 
