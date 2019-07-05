@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 mpl.style.use('ggplot') # optional: for ggplot-like style
 
-def cleanData(df, colVar, rowVar, colsToDrop, totNam):
+def cleanData(df, colVar, rowVar, totNam = None, colsToDrop = None, inCombVals = None, cleanData = True):
     # Count number of 'rowVar' and group by 'colVar'.
     groupdDf = df.groupby(by = [rowVar])[colVar].value_counts()
     groupdDf = groupdDf.unstack()
@@ -19,28 +19,41 @@ def cleanData(df, colVar, rowVar, colsToDrop, totNam):
     rowDict = {str(row): str(row.title()) for row in rowNams}
     groupdDf.rename(index = rowDict, columns = colDict, inplace=True)
 
+
     # Remove columns saved in 'colsToDrop' variable
-    groupdDf.drop(colsToDrop, axis = 1, inplace = True)
+    if colsToDrop is not None:
+        groupdDf.drop(colsToDrop, axis = 1, inplace = True)
 
     # Create list of colNams
     colNams = groupdDf.columns.values
 
+    if cleanData:
+        # clean data removing any rows containing nan and non-numeric values
+        sizeBefore = groupdDf.size
+        groupdDf[colNams] = groupdDf[colNams].apply(pd.to_numeric, errors ='coerce')
+        groupdDf = groupdDf.dropna()
+        sizeAfter = groupdDf.size
 
-    # clean data removing any rows containing nan and non-numeric values
-    sizeBefore = groupdDf.size
-    groupdDf[colNams] = groupdDf[colNams].apply(pd.to_numeric, errors ='coerce')
-    groupdDf = groupdDf.dropna()
-    sizeAfter = groupdDf.size
+        print("\nCleaning deleted: {} rows\n".format(sizeBefore-sizeAfter)) 
+ 
+    # Combine any values passed to the 'inCombVals' dict value
+    if inCombVals is not None:
+        keys = list(inCombVals.keys())
+        for key in keys:
+            groupdDf.loc[key] = groupdDf.loc[inCombVals[key]].sum()
+            print(list(inCombVals[key]))
+            groupdDf.drop(list(inCombVals[key]), inplace = True)
+        
+    # Add a column with is the total of all of the values in the df
+    if totNam is not None:
+        # Add a column named Total to the end of the table
+        groupdDf[totNam] = groupdDf.sum(axis=1)
 
-    print("\nCleaning deleted: {} rows\n".format(sizeBefore-sizeAfter))
 
-    # Add a column named Total to the end of the table
-    groupdDf[totNam] = groupdDf.sum(axis=1)
-
-    # Sort columns by 'Total' and then in order of the colNams
-    groupdDf.sort_values(by = [totNam] + list(colNams),
-                         inplace = True,
-                         ascending = False
+        # Sort columns by 'Total' and then in order of the colNams
+        groupdDf.sort_values(by = [totNam] + list(colNams),
+                             inplace = True,
+                             ascending = False
                         )
     return groupdDf
 

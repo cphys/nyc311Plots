@@ -1,10 +1,7 @@
-# import sys
-# import types
 import os
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
-# from botocore.client import Config
 import matplotlib.pyplot as plt
 from plotFuns import hBarPlots
 from plotFuns import cleanData
@@ -19,23 +16,28 @@ ny311Df = pd.read_csv(dataLoc, skipinitialspace = True, usecols = fields)
 # Variables to be used as col and row headers.
 colVar = 'borough'              # variable to be listed as column headers
 rowVar = 'complaint_type'       # variable to be listed as row headers
-colsToDrop = ['Unspecified']    # column to drop from dataframe
-totNam = 'Total'
+colDr = ['Unspecified']    # column to drop from dataframe
+
+# Name of column to be added with will be the total of all Plots
+tot = 'Total'
+
+# Index values to be combined
+combComps = {"Heating/Hot Water":['Heat/Hot Water','Heating']}
 
 # Clean the data using cleanData function
-groupdDf = cleanData(ny311Df, colVar,rowVar,colsToDrop,totNam)
+groupdDf = cleanData(ny311Df, colVar,rowVar,totNam = tot, colsToDrop = colDr, inCombVals = combComps)
 
 
 colNams = groupdDf.columns.values
-grpNams = np.setdiff1d(colNams,[totNam])
+grpNams = np.setdiff1d(colNams,[tot])
 nGrps = len(grpNams)
-
+topNum = 5
 ## Plot Parameters ##
 width = 8   # Total Width of Figure
 p1Width = 2 # Width of first large plot
 p2Width = 2 # Width of second large plot
 ttlLarge = 'Total New York City 311 Complaints by Categroy'
-ttlVal = 'Top {} 311 complaints by Borough'.format(nGrps)
+ttlVal = 'Top {} 311 complaints by Borough'.format(topNum)
 xlab = 'Number of Complaints'
 # list of colors to be used in the plot
 cols = list(mcolors.TABLEAU_COLORS.values())
@@ -44,7 +46,7 @@ blCol = cols.pop(0)
 
 
 # Create the series of subplots for figure
-fig, axs = plt.subplots(nGrps, width, figsize = (16, 9))
+fig, axs = plt.subplots(nGrps, width, figsize = (16, nGrps*2))
 gs = axs[0,0].get_gridspec()
 
 # remove the underlying axes
@@ -60,22 +62,23 @@ axrs = [fig.add_subplot(gs[i, (width - 2):width]) for i in range(nGrps)]
 
 
 # Sort the items in the dataframe first by total and then by groups
-groupdDf.sort_values(by = [totNam] + list(grpNams), inplace = True, ascending = False)
+groupdDf.sort_values(by = [tot] + list(grpNams), inplace = True, ascending = False)
 
 # Add large plot on LHS using 
-hBarPlots(groupdDf[totNam], axbig1,
-          leg = [totNam],
+hBarPlots(groupdDf[tot], axbig1,
+          leg = [tot],
           pTitle = ttlLarge,
           xAxisLab = xlab,
           yAxisLab = rowVar,
           bWidth = .5,
           cols=[blCol],
+          bwScale = 0.35
          )
 
 # Add large plot in center
 hBarPlots(groupdDf[grpNams], axbig2,
           leg = grpNams,
-          num = nGrps,
+          num = topNum,
           pTitle = ttlVal,
           xAxisLab = xlab,
           cols=cols,
@@ -87,18 +90,17 @@ for i in range(nGrps):
     groupdDf.sort_values(by = [grpNams[i]],inplace = True, ascending = False)
     if i == 0:
         ttl = ttlVal
+        xVal = xlab
+    elif i == nGrps-1:
+        xVal = xlab
     else:
         ttl = ''
-    if i == nGrps:
-        xlab = xlab
-    else:
-        xlab = ''
-
+        xVal = ''
     hBarPlots(groupdDf[grpNams[i]], axrs[i],
               leg = [grpNams[i]],
-              num = nGrps,
+              num = topNum,
               cols = cols[i],
-              xAxisLab = xlab,
+              xAxisLab = xVal,
               pTitle = ttl,
              ) 
 
