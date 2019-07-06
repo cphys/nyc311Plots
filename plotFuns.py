@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
@@ -5,7 +6,8 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 mpl.style.use('ggplot') # optional: for ggplot-like style
 
-def cleanData(df, colVar, rowVar, totNam = None, colsToDrop = None, inCombVals = None, cleanData = True):
+def cleanData(df, colVar, rowVar, totNam = None, colsToDrop = None, inCombVals = None, delNA = True):
+
     # Count number of 'rowVar' and group by 'colVar'.
     groupdDf = df.groupby(by = [rowVar])[colVar].value_counts()
     groupdDf = groupdDf.unstack()
@@ -15,26 +17,35 @@ def cleanData(df, colVar, rowVar, totNam = None, colsToDrop = None, inCombVals =
     rowNams = list(groupdDf.index)
 
     # Rename all of the variables with first letters capitalized.
-    colDict = {str(col): str(col.title()) for col in colNams}
-    rowDict = {str(row): str(row.title()) for row in rowNams}
+    colDict = {col: str(col).title() for col in colNams}
+    rowDict = {row: str(row).title() for row in rowNams}
     groupdDf.rename(index = rowDict, columns = colDict, inplace=True)
-
 
     # Remove columns saved in 'colsToDrop' variable
     if colsToDrop is not None:
-        groupdDf.drop(colsToDrop, axis = 1, inplace = True)
+        try:
+            groupdDf.drop(colsToDrop, axis = 1, inplace = True)
+            print("\nCleaning deleted: columns {}".format(colsToDrop))
+        except:
+            print("\nCleaning deleted: 0 columns")
+    else:
+        print("\nCleaning deleted: 0 columns")
 
     # Create list of colNams
-    colNams = groupdDf.columns.values
+    colNams = groupdDf.columns
 
-    if cleanData:
-        # clean data removing any rows containing nan and non-numeric values
-        sizeBefore = groupdDf.size
-        groupdDf[colNams] = groupdDf[colNams].apply(pd.to_numeric, errors ='coerce')
+    # Convert data to numerical values
+    sizeBefore = groupdDf.size
+    groupdDf[colNams] = groupdDf[colNams].apply(pd.to_numeric, errors ='coerce')
+
+    if delNA:
+        # Drop any rows containing na values
         groupdDf = groupdDf.dropna()
-        sizeAfter = groupdDf.size
-
-        print("\nCleaning deleted: {} rows\n".format(sizeBefore-sizeAfter)) 
+    sizeAfter = groupdDf.size
+    if sizeAfter == 0:
+        sys.exit('All rows contained na values. Cleaning deleted all data')
+        
+    print("\nCleaning deleted: {} rows\n".format(sizeBefore-sizeAfter)) 
  
     # Combine any values passed to the 'inCombVals' dict value
     if inCombVals is not None:
@@ -109,8 +120,12 @@ def hBarPlots(df, axVal, leg = [], recCol='steelblue', num = False, fcol1 = 'whi
     ax.set_xlabel(xAxisLab.replace("_"," ").title())
     ax.set_ylabel(yAxisLab.replace("_"," ").title())
     ax.set_title(pTitle.replace("_"," ").title())
-    ax.legend([iLeg.replace("_"," ").title() for iLeg in leg])
+    ax.legend([str(iLeg).replace("_"," ").title() for iLeg in leg])
     # list x-axis in scientific notation
     ax.ticklabel_format(axis='x',scilimits=(0,0))
     return ax
 
+
+# function for printing the column headers
+def printListOfHeaders(df):
+    return print('\nAvalable headers are:\n' + '%s' % '\n'.join(map(str, df.columns.values)) + '\n')

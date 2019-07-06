@@ -14,8 +14,8 @@ fields = ['complaint_type', 'borough']
 ny311Df = pd.read_csv(dataLoc, skipinitialspace = True, usecols = fields)
 
 # Variables to be used as col and row headers.
-colVar = 'borough'              # variable to be listed as column headers
-rowVar = 'complaint_type'       # variable to be listed as row headers
+rowVar = fields[0]         # variable to be listed as row headers
+colVar = fields[1]         # variable to be listed as column headers
 colDr = ['Unspecified']    # column to drop from dataframe
 
 # Name of column to be added with will be the total of all Plots
