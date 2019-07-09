@@ -10,7 +10,7 @@ def cleanData(df, sortVars = None, totNam = None, colsToDrop = None, inCombVals 
 
     if sortVars is not None:
         # Count number of 'rowVar' and group by 'colVar'.
-        groupdDf = df.groupby(by = [sortVars[0]])[sortVars[1]].value_counts()
+        groupdDf = df.groupby(by = sortVars[0])[sortVars[1]].value_counts()
         groupdDf = groupdDf.unstack()
 
     else:
@@ -83,18 +83,14 @@ def cleanData(df, sortVars = None, totNam = None, colsToDrop = None, inCombVals 
 
 
 
-def hBarPlots(df, axVal, leg = None, recCol='steelblue', num = False, fcol1 = 'white', fcol2 = 'black', fsiz = 12, fws = .01, xAxisLab = '', yAxisLab = '', pTitle = '', bwScale = 0.2, bWidth = .75, cols = list(mcolors.TABLEAU_COLORS.values()), stkd = False, legLoc = 'uR'):   
+def hBarPlots(df, axVal, leg = "", totLeg = "", recCol='steelblue', fcol1 = 'white', fcol2 = 'black', fsiz = 12, fws = .01, xAxisLab = '', yAxisLab = True, pTitle = '', bwScale = 0.2, bWidth = .75, cols = list(mcolors.TABLEAU_COLORS.values()), stkd = False, legLoc = 'uR'):   
 
-    if not num:
-        ax = df.plot(ax = axVal, kind = 'barh', stacked = stkd, rot = 0, width = bWidth, color = cols)
-    else:
-        ax = df.head(int(num)).plot(ax = axVal, kind = 'barh', stacked = stkd, rot = 0, width = bWidth, color = cols) 
+    ax = df.plot(ax = axVal, kind = 'barh', stacked = stkd, rot = 0, width = bWidth, color = cols)
 
     # create annotations at the end of the plots
     if not stkd:
         # find maximum value rectangle width
-        totals = [i.get_width() for i in ax.patches]
-        maxVal = np.max(totals)
+        maxVal = np.max([i.get_width() for i in ax.patches])
         for i in ax.patches:
             # get_width pulls left or right; get_y pushes up or down
             width = i.get_width()
@@ -132,23 +128,31 @@ def hBarPlots(df, axVal, leg = None, recCol='steelblue', num = False, fcol1 = 'w
 
     # plot labels
     ax.set_xlabel(xAxisLab.replace("_"," ").title())
-    ax.set_ylabel(yAxisLab.replace("_"," ").title())
+
+    if yAxisLab:
+        ax.set_ylabel(str(df.index.name).replace("_"," ").title())
+    elif not yAxisLab:
+        pass
+    else:
+        ax.set_ylabel(yAxisLab.replace("_"," ").title())
+
     ax.set_title(pTitle.replace("_"," ").title())
 
-
+    # Create the legend based on input variables and location
     if leg is not None:
-        legLen = len(leg)
-        formLeg = [str(iLeg).replace("_"," ").title() for iLeg in leg]
-        if legLoc =='below':
-            if legLen > 1:
+        if legLoc is not None:
+            legLen = len(leg)
+            if totLeg is not None:
+                formLeg = [str(leg[i]).replace("_"," ").title() + "\n({})".format(format(int(totLeg[i]), ',')) for i in range(len(leg))]
+            else:
+                formLeg = [str(leg[i]).replace("_"," ").title() for i in range(len(leg))]
+
+            if legLoc =='below':
                 ax.legend(formLeg, loc='upper center', bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=legLen)
             else:
                 ax.legend(formLeg, loc='upper right', fancybox=True, shadow=True)
-        elif legLoc == None:
-            pass
-        else:
-            ax.legend(formLeg, loc='upper right', fancybox=True, shadow=True)
-            
+
+         
         
     # list x-axis in scientific notation
     ax.ticklabel_format(axis='x',scilimits=(0,0))
