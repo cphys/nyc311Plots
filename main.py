@@ -24,20 +24,20 @@ colHeads = np.array(ny311Df.columns).astype(str)
 
 
 ### Question 1 ###
-'''
+
 fields = np.array([['complaint_type'], 'borough'])
-wScale = 1.25    # scale the total width of the plot
-hScale = 1.0   # scale the total height of the plot
+wScale = 1.25   # scale the total width of the plot
+hScale = 1.0    # scale the total height of the plot
 numRows = 7     # Number of rows for group divisions
 totTopNum = 20  # Number of rows for y-axis of large plot
 numCols = 8     # Number of columns for group divisions
 legLoc2 = 'uR'
 legLoc3 = 'uR'
-'''
+
 ##################
 
 ### Question 2 ###
-
+'''
 fields = np.array([['incident_address'],'complaint_type' ])
 wScale = 1.75   # scale the total width of the plot
 hScale = 1.5    # scale the total height of the plot
@@ -46,13 +46,14 @@ totTopNum = 20  # Number of rows for y-axis of large plot
 numCols = 6     # Number of columns for group divisions
 legLoc2 = 'uR'
 legLoc3 = 'uR'
-
+'''
 ##################
 
 
 ny311Df = pd.read_csv(dataLoc, skipinitialspace = True, usecols = np.hstack(fields))
 
 colDr = None    # column to drop from dataframe
+# colDr = ['Unspecified']
 
 tot = 'Total'   # Name of column to be added. Will be the total of all rows
 
@@ -63,12 +64,12 @@ for field in fields:
         ny311Df[field] = ny311Df[field].astype('Int32')
 
 
-# Index values to be combined and/or renamed
+
 
 
 # wScale = 1.5 # scale the total width of the plot
   
-
+# Index values to be combined and/or renamed
 if fields[1] == 'complaint_type':
     combRow = None
 
@@ -78,9 +79,6 @@ if fields[1] == 'complaint_type':
                'Non-Construction' : ['Nonconst'],
                'Unsanitary\nCondition' : ['Unsanitary Condition'],
                'Door/\nWindow' : ['Door/Window']}
-
-
-
 
 elif fields[0][0] == 'complaint_type':
     combCol = None
@@ -95,14 +93,11 @@ else:
     combCol = None
 
 
+# Sort the data and find the top 'numCols' 311 complaints city wide
+columnNames = cleanData(ny311Df, sortVars = [[fields[1]], fields[0][0]], totNam = tot, inCombVals = [combCol, combRow], rowsToDrop = colDr, sortBy = [tot]).index.values
 
 # Create a dataframe with fields[0] as the rows fields[1] as the columns
-groupdDf = cleanData(ny311Df, sortVars = fields, totNam = tot, inCombVals = [combRow, combCol], colsToDrop = colDr, sortBy = [tot])
-
-
-# Sort the data and find the top 'numCols' 311 complaints city wide
-columnNames = cleanData(ny311Df, sortVars = [[fields[1]], fields[0][0]], totNam = tot, inCombVals = [combCol, combRow], colsToDrop = colDr, sortBy = [tot]).index.values
-
+groupdDf = cleanData(ny311Df, sortVars = fields, totNam = tot, inCombVals = [combRow, combCol], colsToDrop = colDr, toNum = columnNames, sortBy = [tot])
 
 if numCols > len(columnNames):
     numCols = len(columnNames)
